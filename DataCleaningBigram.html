@@ -67,7 +67,7 @@
 
     <!-- Jupyter Notebook HTML -->
 <head><meta charset="utf-8" />
-<title>NYTimes_API_Final</title>
+<title>DataCleaning_Final</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -235,31 +235,39 @@ div#notebook {
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container">
 
+
 <div class="cell border-box-sizing text_cell rendered">
 <div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><hr width=80%></p>
-<h1 id="Obtaining-the-Data"><center>Obtaining the Data</center><a class="anchor-link" href="#Obtaining-the-Data"></a></h1><hr width=80%>
+<h1><center> Data Cleaning & Bigrams</center></h1>
+<hr width=80%>
 </div>
 </div>
 </div>
-
 <div class="cell border-box-sizing text_cell rendered">
 <div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <ul>
-<li><h3><a href="#Consumer-Confidence-Index">Consumer Confidence Index</a></h3></li>
-<li><h3><a href="#New-York-Times-Articles">New York Times Articles</a></h3><ul>
-<li><a href="#Article-Search-API">Article Search API</a></li>
-<li><a href="#Peculiarities-of-the-API">Peculiarities of the API</a></li>
-<li><a href="#Downloading-the-Data">Downloading the Data</a></li>
-<li><a href="#Working-with-the-Files">Working with the Files</a></li>
+<li><h3><a href="#Data-Cleaning">Data Cleaning</a></h3><ul>
+<li><a href="#Loading-the-data">Loading the data</a></li>
+<li><a href="#Removing-missing-data">Removing missing data</a></li>
+<li><a href="#Article-Search-API">Adding 'yearmonth'</a></li>
+<li><a href="#Stemming">Stemming</a></li>
 </ul>
 </li>
+<li><h3><a href="#Extracting-Unigrams-and-Bigrams">Extracting Unigrams and Bigrams</a></h3><ul>
+<li><a href="#Getting-the-count-of-all-bigrams">Getting the count of all bigrams</a></li>
+<li><a href="#Calculating-Dunning-Log-Likelihood-Ratio">Calculating Dunning Log-Likelihood Ratio</a></li>
+<li><a href="#Using-the-Bigram-Vocabulary">Using the Bigram Vocabulary</a></li>
+<li><a href="#Count-Vectorizing">Count Vectorizing</a></li>
+</ul>
+</li>
+<li><h3><a href="#Monthly-Aggregates">Monthly Aggregates</a></h3></li>
 </ul>
 
 </div>
@@ -270,8 +278,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Consumer-Confidence-Index">Consumer Confidence Index<a class="anchor-link" href="#Consumer-Confidence-Index">&#182;</a></h2><hr>
-
+<h2 id="Data-Cleaning">Data Cleaning<a class="anchor-link" href="#Data-Cleaning">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -280,8 +287,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The consumer confidence index (CCI) is based on survey results of real consumers. They are asked their opinions of current and future economic conditions as well as about their personal economic situation. These survey questions are encoded and normalized to a baseline of 100 coming from the 1985 results. These results are obtained on a monthly basis by the Organisation for Economic Co-operation and Development and can be downloaded directly as a CSV from <a href="https://data.oecd.org/leadind/consumer-confidence-index-cci.htm">https://data.oecd.org/leadind/consumer-confidence-index-cci.htm</a>.</p>
-
+<h3 id="Loading-the-data">Loading the data<a class="anchor-link" href="#Loading-the-data">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -290,29 +296,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="New-York-Times-Articles">New York Times Articles<a class="anchor-link" href="#New-York-Times-Articles">&#182;</a></h2><hr>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Article-Search-API">Article Search API<a class="anchor-link" href="#Article-Search-API">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The New York Times Article Search API allows for searching and obtaining headlines and lead paragraphs of articles dating back to 1851. Along with each article, there is metadata like the date it was published and the section in which it appeared. There is definitely some possibility that not all articles make it into the database, but an inspection of modern articles finds an order of 10s of articles per day which seems reasonable. The API call returns the data as JSON which can be used as such or transformed into CSV.</p>
-<p>To access the API, one needs to obtain an API key from <a href="https://developer.nytimes.com/signup">https://developer.nytimes.com/signup</a>. And install the API using:</p>
-<div class="highlight"><pre><span class="n">! pip</span> <span class="n">install</span> <span class="n">nytimesarticle</span>
-</pre></div>
+<p>We will load all of our data files from the API calls and put them into a single dataframe. This covers 1990 through 2016.</p>
 
 </div>
 </div>
@@ -322,193 +306,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="kn">from</span> <span class="nn">nytimesarticle</span> <span class="kn">import</span> <span class="n">articleAPI</span>
-<span class="n">api</span> <span class="o">=</span> <span class="n">articleAPI</span><span class="p">(</span><span class="s">&#39;ca372b5c9318406780fe9ebef28e96a1&#39;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Peculiarities-of-the-API">Peculiarities of the API<a class="anchor-link" href="#Peculiarities-of-the-API">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>The first thing to note are the usage limits for the API. Calls are limited to 1000 per day and 5 per second. Therefore, we need to make sure that our function sleeps between each call. The trickier issue with the API is that it will only return 100 pages of results from any given search. This means that searching for a year long window will have too many results and you will just get the first few weeks which fills the 100 pages. For this reason, we iterate through search windows of one week and monitor the number of pages found to make sure that it never exceeds 100 from any given search.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Downloading-the-Data">Downloading the Data<a class="anchor-link" href="#Downloading-the-Data">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>We will save each year of data as a separate CSV. The steps of the downloading the data to CSV is as follows.</p>
-<ol>
-<li>Denote the first week long interval to search</li>
-<li>Make an API call to search for articles in that week from the business section</li>
-<li>Check how many pages are returned from the search</li>
-<li>Iterate through the pages and articles in the page</li>
-<li>Extract data from JSON and put into CSV format</li>
-<li>After getting one week of data as a CSV, append to the file</li>
-</ol>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">downloadToFile</span><span class="p">(</span><span class="n">startdate</span><span class="p">,</span> <span class="n">enddate</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Makes API calls to extract id, publication date, headline, and lead paragraph from NY Times articles in the date range.</span>
-<span class="sd">    Then, saves the data to a local file in csv format.</span>
-<span class="sd">    startdate: start of date range to extract (yyyymmdd)</span>
-<span class="sd">    enddate: end of date range to extract (yyyymmdd)</span>
-<span class="sd">    filename: csv file to create and append to</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">startdate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">startdate</span><span class="p">),</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">)</span>
-    <span class="n">enddate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">enddate</span><span class="p">),</span> <span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">)</span>
-
-    <span class="n">sliceStart</span> <span class="o">=</span> <span class="n">startdate</span>
-
-    <span class="k">while</span> <span class="p">(</span><span class="n">sliceStart</span><span class="o">&lt;</span><span class="n">enddate</span><span class="p">):</span>
-        <span class="n">leads</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">ids</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">dates</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">headlines</span> <span class="o">=</span> <span class="p">[]</span>
-        
-        <span class="n">sliceEnd</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">sliceStart</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">enddate</span><span class="p">)</span>
-
-        <span class="n">sliceStartInt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sliceStart</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">))</span>
-        <span class="n">sliceEndInt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sliceEnd</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y%m</span><span class="si">%d</span><span class="s">&#39;</span><span class="p">))</span>
-        <span class="k">print</span> <span class="s">&#39;Downloading from {} to {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sliceStartInt</span><span class="p">,</span> <span class="n">sliceEndInt</span><span class="p">)</span>
-        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">numhits</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">fl</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">],</span><span class="n">begin_date</span> <span class="o">=</span> <span class="n">sliceStartInt</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">sliceEndInt</span><span class="p">,</span><span class="n">fq</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;section_name&#39;</span><span class="p">:</span><span class="s">&#39;Business&#39;</span><span class="p">},</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="s">&#39;meta&#39;</span><span class="p">][</span><span class="s">&#39;hits&#39;</span><span class="p">]</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="k">break</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="k">print</span> <span class="s">&#39;JSON error avoided&#39;</span>
-        <span class="n">pages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">numhits</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span><span class="p">))</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">pbar2</span> <span class="o">=</span> <span class="n">ProgressBar</span><span class="p">(</span><span class="n">pages</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&#39;{} pages to download&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pages</span><span class="p">)</span> <span class="c"># Note that you can&#39;t download past page number 100</span>
-        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">pages</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)):</span>
-            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">articles</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">fl</span><span class="o">=</span> <span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">,</span><span class="s">&#39;headline&#39;</span><span class="p">,</span><span class="s">&#39;lead_paragraph&#39;</span><span class="p">,</span><span class="s">&#39;pub_date&#39;</span><span class="p">],</span> <span class="n">begin_date</span> <span class="o">=</span> <span class="n">sliceStartInt</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">sliceEndInt</span><span class="p">,</span><span class="n">fq</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;section_name&#39;</span><span class="p">:</span><span class="s">&#39;Business&#39;</span><span class="p">},</span> <span class="n">page</span><span class="o">=</span><span class="n">page</span><span class="p">)</span>
-                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                    <span class="k">break</span>
-                <span class="k">except</span><span class="p">:</span>
-                    <span class="k">print</span> <span class="s">&#39;JSON error avoided&#39;</span>
-            
-            <span class="n">pbar2</span><span class="o">.</span><span class="n">increment</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">articles</span><span class="p">[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="s">&#39;docs&#39;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s">&#39;lead_paragraph&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s">&#39;headline&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="p">[]):</span>
-                    <span class="n">headlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s">&#39;headline&#39;</span><span class="p">][</span><span class="s">&#39;main&#39;</span><span class="p">])</span>
-                    <span class="n">leads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s">&#39;lead_paragraph&#39;</span><span class="p">])</span>
-                    <span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s">&#39;_id&#39;</span><span class="p">])</span>
-                    <span class="n">dates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s">&#39;pub_date&#39;</span><span class="p">])</span>
-
-        <span class="n">pbar2</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
-        <span class="n">sliceStart</span> <span class="o">=</span> <span class="n">sliceEnd</span>
-
-        <span class="n">zipped</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">dates</span><span class="p">,</span> <span class="n">headlines</span><span class="p">,</span> <span class="n">leads</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">zipped</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">zipped</span><span class="p">:</span> 
-                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="nb">unicode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">line</span><span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="n">downloadToFile</span><span class="p">(</span><span class="mi">19900101</span><span class="p">,</span> <span class="mi">19900115</span><span class="p">,</span> <span class="s">&#39;Sample_Output.csv&#39;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area"><div class="prompt"></div>
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Downloading from 19900101 to 19900108
-39 pages to download
-Complete! Total Elapsed time: 54.0 seconds                        
-Downloading from 19900108 to 19900115
-61 pages to download
-Complete! Total Elapsed time: 82.5 seconds                        
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Working-with-the-Files">Working with the Files<a class="anchor-link" href="#Working-with-the-Files">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's just check what we have in the files now. We can iterate over the yearly CSV files to make a dataframe with all of the data.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[6]:</div>
-<div class="inner_cell">
-    <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="n">all_data_list</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1990</span><span class="p">,</span><span class="mi">1992</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1990</span><span class="p">,</span><span class="mi">2017</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">&#39;{}_Output.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">),</span> <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
     <span class="n">all_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="c"># list of dataframes</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_data_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -524,7 +323,7 @@ Complete! Total Elapsed time: 82.5 seconds
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[6]:</div>
+<div class="output_area"><div class="prompt output_prompt">Out[2]:</div>
 
 <div class="output_html rendered_html output_subarea output_execute_result">
 <div>
@@ -585,9 +384,1724 @@ Complete! Total Elapsed time: 82.5 seconds
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Removing-missing-data">Removing missing data<a class="anchor-link" href="#Removing-missing-data">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>By inspection, we see that the data is remarkably clean. There are almost no changes that need to be made, except for removing a few articles that do not have lead paragraphs. This is only ~500 articles out of ~500,000.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[3]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(578151, 4)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[5]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(577624, 4)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Adding-'yearmonth'">Adding 'yearmonth'<a class="anchor-link" href="#Adding-'yearmonth'">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We add a column that uniquely identifies just the month and year of each article. This is useful because we will be aggregating by month several times later on.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">data</span><span class="p">[</span><span class="s">&#39;yearmonth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[:</span><span class="mi">7</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Stemming">Stemming<a class="anchor-link" href="#Stemming">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The lead paragraphs are then tokenized and stemmed. Tokenizing just makes an ordered list of words from each lead paragraph and removes punctuation. The stemming removes suffixes like the plural “s” or past “ed” which we hypothesize not to have semantic importance. Lastly, we add the stemmed lead paragraphs to the dataframe.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">getStems</span><span class="p">(</span><span class="n">lead</span><span class="p">):</span>
+    <span class="n">stemmer</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">SnowballStemmer</span><span class="p">(</span><span class="s">&quot;english&quot;</span><span class="p">)</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">word_tokenize</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ch</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">lead</span> <span class="k">if</span> <span class="n">ch</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">stemmer</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)),</span> <span class="n">tokens</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">joinstems</span><span class="p">(</span><span class="n">stemlist</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stem</span> <span class="k">for</span> <span class="n">stem</span> <span class="ow">in</span> <span class="n">stemlist</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">stems</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">getStems</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">lead</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">data</span><span class="p">[</span><span class="s">&#39;leadstems&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">joinstems</span><span class="p">,</span> <span class="n">stems</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[11]:</div>
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>date</th>
+      <th>headline</th>
+      <th>lead</th>
+      <th>yearmonth</th>
+      <th>leadstems</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>4fd1aa888eb7c8105d6c860e</td>
+      <td>1990-01-03T00:00:00Z</td>
+      <td>Tandem Expected To Show Computer</td>
+      <td>LEAD: Tandem Computers Inc. is expected to int...</td>
+      <td>1990-01</td>
+      <td>lead tandem comput inc is expect to introduc n...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>52b85b7738f0d8094087c782</td>
+      <td>1990-01-03T00:00:00Z</td>
+      <td>Chrysler Shows Van Concept</td>
+      <td>LEAD: The Chrysler Corporation today introduce...</td>
+      <td>1990-01</td>
+      <td>lead the chrysler corpor today introduc a futu...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>52b85b7638f0d8094087c780</td>
+      <td>1990-01-02T00:00:00Z</td>
+      <td>Loan Pact Seen For Hungary</td>
+      <td>LEAD: Hungary expects to complete a deal with ...</td>
+      <td>1990-01</td>
+      <td>lead hungari expect to complet a deal with the...</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>52b85b7538f0d8094087c77f</td>
+      <td>1990-01-02T00:00:00Z</td>
+      <td>Counterattack Planned By Lawyers for Lincoln</td>
+      <td>LEAD: Lawyers for Charles H. Keating Jr., who ...</td>
+      <td>1990-01</td>
+      <td>lead lawyer for charl h keat jr who head the b...</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4fd18d4c8eb7c8105d691815</td>
+      <td>1990-01-08T00:00:00Z</td>
+      <td>Intermetrics Inc reports earnings for Qtr to N...</td>
+      <td>LEAD: *3*** COMPANY REPORTS ** *3* Intermetric...</td>
+      <td>1990-01</td>
+      <td>lead 3 compani report 3 intermetr inc otc qtr ...</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Extracting-Unigrams-and-Bigrams">Extracting Unigrams and Bigrams<a class="anchor-link" href="#Extracting-Unigrams-and-Bigrams">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Unigrams are single words without context. Using CountVectorizer it is straightforward to extract the unigrams that occur in at least 0.5% of articles and less than 80% of articles.</p>
+<p>Beyond unigrams, we also speculate that co-occurrence of words is relevant in business articles. For example, “unemployment fell” includes two words that independently are negative, but together are positive. Therefore, we also want to extract bigrams, pairs of words that appear consecutively. However, there are many more bigrams than unigrams as unigrams are limited to the size of the dictionary and bigrams are limited to that number squared. To reduce the dimension, we only use bigrams where the two words are much more likely to occur together than separately based on the <a href="#http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=6EB3C415737C0A93B117F08A4BEC9B72?doi=10.1.1.14.5962&rep=rep1&type=pdf">Dunning Log-Likelihood Ratio</a>(DLLR).</p>
+<p>The essence of the DLLR statistic is that it measures how much more likely two words occur consecutively than would be expected by chance. As expected, this statistic takes as inputs the number of times the constituent words occur together and separately.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Getting-the-count-of-all-bigrams">Getting the count of all bigrams<a class="anchor-link" href="#Getting-the-count-of-all-bigrams">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The first step is to extract all of the bigram stems from the entire dataset using the appropriate function from <code>nltk</code>. Then, we put all bigrams regardless of article into a list and count the number of times that each unique bigram occurs.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">getBigrams</span><span class="p">(</span><span class="n">stems</span><span class="p">):</span>
+    <span class="n">stems</span> <span class="o">=</span> <span class="n">stems</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">finder</span> <span class="o">=</span> <span class="n">nltk</span><span class="o">.</span><span class="n">collocations</span><span class="o">.</span><span class="n">BigramCollocationFinder</span><span class="o">.</span><span class="n">from_words</span><span class="p">(</span><span class="n">stems</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">finder</span><span class="o">.</span><span class="n">ngram_fd</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigramList</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">getBigrams</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">leadstems</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">flatBigrams</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">bigramList</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">reduceByKey</span><span class="p">(</span><span class="n">toIterate</span><span class="p">):</span> <span class="c"># For us, the bigram is the key</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">toIterate</span><span class="p">):</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">summedBigrams</span> <span class="o">=</span> <span class="n">reduceByKey</span><span class="p">(</span><span class="n">flatBigrams</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It's useful to be able to save and load this result since it takes a few minutes to run.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[212]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;summedBigrams.pkl&quot;</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file</span><span class="p">:</span>
+    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">summedBigrams</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[213]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;summedBigrams.pkl&quot;</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">input_file</span><span class="p">:</span>
+    <span class="n">summedBigrams2</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Calculating-Dunning-Log-Likelihood-Ratio">Calculating Dunning Log-Likelihood Ratio<a class="anchor-link" href="#Calculating-Dunning-Log-Likelihood-Ratio">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It is not important to go into the details of the calculations, but we use a few nested functions to keep all of the logs from getting messy. In the literature, the notation used is,
+$$k_{11}=N(A,B)$$
+$$k_{12}=N(A,not B)$$
+$$k_{21}=N(not A,B)$$
+$$k_{22}=N(not A,not B)$$
+Where $N(A,B)$ is the number of times the bigram "A B" occurs.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">xLogX</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    
+<span class="k">def</span> <span class="nf">entropy</span><span class="p">(</span><span class="n">things</span><span class="p">):</span>
+    <span class="n">theSum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">theResult</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">thing</span> <span class="ow">in</span> <span class="n">things</span><span class="p">:</span>
+        <span class="n">theResult</span> <span class="o">+=</span> <span class="n">xLogX</span><span class="p">(</span><span class="n">thing</span><span class="p">)</span>
+        <span class="n">theSum</span> <span class="o">+=</span> <span class="n">thing</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="n">xLogX</span><span class="p">(</span><span class="n">theSum</span><span class="p">)</span> <span class="o">-</span> <span class="n">theResult</span><span class="p">;</span>
+
+<span class="k">def</span> <span class="nf">logLikelihoodRatio</span><span class="p">(</span><span class="n">k11</span><span class="p">,</span> <span class="n">k12</span><span class="p">,</span> <span class="n">k21</span><span class="p">,</span> <span class="n">k22</span><span class="p">):</span>
+    <span class="n">rowEntropy</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">([</span><span class="n">k11</span> <span class="o">+</span> <span class="n">k12</span><span class="p">,</span> <span class="n">k21</span> <span class="o">+</span> <span class="n">k22</span><span class="p">]);</span>
+    <span class="n">columnEntropy</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">([</span><span class="n">k11</span> <span class="o">+</span> <span class="n">k21</span><span class="p">,</span> <span class="n">k12</span> <span class="o">+</span> <span class="n">k22</span><span class="p">]);</span>
+    <span class="n">matrixEntropy</span> <span class="o">=</span> <span class="n">entropy</span><span class="p">([</span><span class="n">k11</span><span class="p">,</span> <span class="n">k12</span><span class="p">,</span> <span class="n">k21</span><span class="p">,</span> <span class="n">k22</span><span class="p">]);</span>
+    <span class="k">return</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">rowEntropy</span> <span class="o">+</span> <span class="n">columnEntropy</span> <span class="o">-</span> <span class="n">matrixEntropy</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">getLLR</span><span class="p">(</span><span class="n">summedBigram</span><span class="p">):</span>
+    <span class="n">k11</span> <span class="o">=</span> <span class="n">summedBigram</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">stem1</span> <span class="o">=</span> <span class="n">summedBigram</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">stem2</span> <span class="o">=</span> <span class="n">summedBigram</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">k12</span> <span class="o">=</span> <span class="n">bigrams1Dict</span><span class="p">[</span><span class="n">stem1</span><span class="p">]</span> <span class="o">-</span> <span class="n">k11</span>
+    <span class="n">k21</span> <span class="o">=</span> <span class="n">bigrams2Dict</span><span class="p">[</span><span class="n">stem2</span><span class="p">]</span> <span class="o">-</span> <span class="n">k11</span>
+    <span class="n">k22</span> <span class="o">=</span> <span class="n">totalBigrams</span> <span class="o">-</span> <span class="n">k11</span> <span class="o">-</span> <span class="n">k12</span> <span class="o">-</span> <span class="n">k21</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">logLikelihoodRatio</span><span class="p">(</span><span class="n">k11</span><span class="p">,</span> <span class="n">k12</span><span class="p">,</span> <span class="n">k21</span><span class="p">,</span> <span class="n">k22</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It is also useful to have a dictionary of the number of times each word appears in any general bigram so that we can find the $N(A, not\,B)$ and like terms</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigrams1</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">summedBigrams</span><span class="p">)</span>
+<span class="n">summedBigrams1</span><span class="o">=</span> <span class="n">reduceByKey</span><span class="p">(</span><span class="n">bigrams1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigrams2</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">summedBigrams</span><span class="p">)</span>
+<span class="n">summedBigrams2</span><span class="o">=</span> <span class="n">reduceByKey</span><span class="p">(</span><span class="n">bigrams2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigrams1Dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">summedBigrams1</span><span class="p">)</span>
+<span class="n">bigrams2Dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">summedBigrams2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">onlyValues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">summedBigrams</span><span class="p">))</span>
+<span class="n">totalBigrams</span> <span class="o">=</span> <span class="n">onlyValues</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Finally, we can get the DLLR statistic for each bigram.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">LLRs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">getLLR</span><span class="p">,</span> <span class="n">summedBigrams</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[26]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">LLRs</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">200000</span><span class="p">);</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Dunning Log-likelihood Ratio&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Counts&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;Distribution of Bigram Log-Likelihood Ratios&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[26]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;matplotlib.text.Text at 0x24a0e44d0&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area"><div class="prompt"></div>
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+AdOAeyPiY8BdwHk52wzgzry8EJiWZ9qNBw4HHszDfW2SJuXJENMrtpmRl88hTaYAWAxMljQ8T4SY
+nNPMzKwEyvY7piuBBZLOB1aTZuIREcslLSDN4NsCXBAR7cN8FwI3AvsCiyLi7px+PTBP0ipgAykA
+EhGbJF0BPEwaKmzKkyDMzKwEtOPz3SpJimpOczU0TGTz5sep/pSYqswr/PqY2e5GEhHR5ysE1Pp3
+TGZmZh04MJmZWak4MJmZWak4MJmZWak4MJmZWak4MJmZWak4MJmZWak4MJmZWak4MJmZWak4MJXa
+Pkiq6jF69LhaV9bMbECU7Vp51sHLVHuZo9bWPl/9w8ysVNxjMjOzUnFgMjOzUnFgMjOzUnFgMjOz
+UnFgMjOzUnFgMjOzUnFgMjOzUnFgMjOzUnFgMjOzUnFgMjOzUnFgMjOzUnFgMjOzUqlJYJI0VtK9
+kn4l6TFJn8rpIyQtkbRS0mJJwwvbzJK0StIKSacV0o+TtEzSE5LmFtKHSpqft7lf0iGFdTNy/pWS
+pu+q4zYzs57Vqse0Fbg4It4EnARcKOmNwKXAPRFxJHAvMAtA0tHAucBRwBnANZLaL6d9LTAzIiYA
+EyRNyekzgY0RcQQwF7g6lzUCuBw4HjgBmF0MgGZmVls1CUwRsT4ifpGXXwJWAGOBs4CbcrabgLPz
+8lRgfkRsjYingVXAJEmjgWER8VDOd3Nhm2JZtwOn5OUpwJKIaIuIF4AlwOkDf5S7mu/dZGZ7hprf
+j0nSOOBY4AFgVES0Qgpekg7M2cYA9xc2a8lpW4G1hfS1Ob19mzW5rG2S2iSNLKZXlLWb872bzGzP
+UNPAJOk1pN7MRRHxkqTKT9bqPmmr3F3fNptTWG7MDzMza9fc3Exzc/OAlVezwCRpb1JQmhcRd+bk
+VkmjIqI1D9M9l9NbgIMLm4/NaV2lF7dZJ2kI0BARGyW10DG6jAWWdl3TOb0+NjOzetLY2EhjY+Mr
+z5uamvpVXi2ni38bWB4RXyukLQTOy8szgDsL6dPyTLvxwOHAgxGxHmiTNClPhphesc2MvHwOaTIF
+wGJgsqTheSLE5JxmZmYlUJMek6STgY8Cj0l6lDRkdxlwFbBA0vnAatJMPCJiuaQFwHJgC3BBRLQP
+810I3AjsCyyKiLtz+vXAPEmrgA3AtFzWJklXAA/n/TblSRBmZlYC2vH5bpXSOa+e26ehYSKbNz9O
+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
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">print</span> <span class="s">&#39;Most likely bigram: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">summedBigrams</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">LLRs</span><span class="p">))][</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Most likely bigram: (u&apos;new&apos;, u&apos;york&apos;)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Just as a sanity check, it is good to note that "New York" is most likely to be a bigram according to our metric. This makes sense as "New" and "York" are way more likely to occur together than separately, especially in the New York Times.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Lastly, we have done a lot of computation so we can save the results.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">justBigrams</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">summedBigrams</span><span class="p">)</span>
+<span class="n">bigramLLR</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">justBigrams</span><span class="p">,</span><span class="n">LLRs</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[235]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;bigramLLR.pkl&quot;</span><span class="p">,</span> <span class="s">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file</span><span class="p">:</span>
+    <span class="n">cPickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">bigramLLR</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[65]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&quot;bigramLLR.pkl&quot;</span><span class="p">,</span> <span class="s">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">input_file</span><span class="p">:</span>
+    <span class="n">bigramLLR</span> <span class="o">=</span> <span class="n">cPickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Using-the-Bigram-Vocabulary">Using the Bigram Vocabulary<a class="anchor-link" href="#Using-the-Bigram-Vocabulary">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Choosing the minimum DLLR threshold for inclusion in our bigram vocabulary is a bit arbitrary, but we can set it such that we have a reasonable number of bigrams in our final vocab. With some testing, 1500 is a good threshold.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigramVocab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">summedBigrams</span><span class="p">)[</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">LLRs</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1500</span><span class="p">)[</span><span class="mi">0</span><span class="p">])]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[31]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="nb">len</span><span class="p">(</span><span class="n">bigramVocab</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[31]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>8626</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Much like with unigrams, it makes sense to eliminate bigrams that contain stopwords as those are not likely to have any meaning in our future analysis.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[32]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">stopwords</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;or&#39;</span><span class="p">,</span><span class="s">&#39;the&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;an&#39;</span><span class="p">,</span><span class="s">&#39;and&#39;</span><span class="p">,</span><span class="s">&#39;as&#39;</span><span class="p">,</span><span class="s">&#39;at&#39;</span><span class="p">,</span><span class="s">&#39;it&#39;</span><span class="p">,</span><span class="s">&#39;this&#39;</span><span class="p">,</span><span class="s">&#39;that&#39;</span><span class="p">,</span><span class="s">&#39;he&#39;</span><span class="p">,</span><span class="s">&#39;I&#39;</span><span class="p">,</span><span class="s">&#39;she&#39;</span><span class="p">,</span><span class="s">&#39;of&#39;</span><span class="p">,</span><span class="s">&#39;is&#39;</span><span class="p">,</span><span class="s">&#39;was&#39;</span><span class="p">,</span><span class="s">&#39;are&#39;</span><span class="p">,</span><span class="s">&#39;be&#39;</span><span class="p">,</span><span class="s">&#39;did&#39;</span><span class="p">,</span><span class="s">&#39;do&#39;</span><span class="p">,</span><span class="s">&#39;has&#39;</span><span class="p">,</span><span class="s">&#39;had&#39;</span><span class="p">,</span><span class="s">&#39;have&#39;</span><span class="p">,</span><span class="s">&#39;with&#39;</span><span class="p">,</span><span class="s">&#39;for&#39;</span><span class="p">,</span><span class="s">&#39;from&#39;</span><span class="p">,</span> <span class="s">&#39;to&#39;</span><span class="p">,</span> <span class="s">&#39;on&#39;</span><span class="p">,</span> <span class="s">&#39;in&#39;</span><span class="p">,</span> <span class="s">&#39;monday&#39;</span><span class="p">,</span> <span class="s">&#39;tuesday&#39;</span><span class="p">,</span> <span class="s">&#39;wednesday&#39;</span><span class="p">,</span> <span class="s">&#39;thursday&#39;</span><span class="p">,</span> <span class="s">&#39;friday&#39;</span><span class="p">,</span> <span class="s">&#39;saturday&#39;</span><span class="p">,</span> <span class="s">&#39;sunday&#39;</span><span class="p">,</span> <span class="s">&#39;yesterday&#39;</span><span class="p">,</span> <span class="s">&#39;tomorrow&#39;</span><span class="p">,</span><span class="s">&#39;year&#39;</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[33]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigramVocab</span> <span class="o">=</span> <span class="p">[</span><span class="n">bigram</span> <span class="k">for</span> <span class="n">bigram</span> <span class="ow">in</span> <span class="n">bigramVocab</span> <span class="k">if</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">bigram</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">stopwords</span><span class="p">))]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Lastly, we will stitch together just the stems from the bigram vocabulary list so that they are exactly how they will appear in the stemmed lead paragraphs.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[34]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">bigramVocab</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s">&#39; &#39;</span><span class="o">+</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="n">bigramVocab</span><span class="p">))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Count-Vectorizing">Count Vectorizing<a class="anchor-link" href="#Count-Vectorizing">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We seek to extract the number of times each unigram and bigram of interest appears in each article. We already have a bigram vocabulary, but we need to create a unigram vocabulary by doing a first pass with the count vectorizer only looking for unigrams.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[35]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">countVec</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">stop_words</span><span class="o">=</span><span class="s">&#39;english&#39;</span><span class="p">,</span> <span class="n">max_df</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">min_df</span><span class="o">=.</span><span class="mo">005</span><span class="p">,</span> <span class="n">strip_accents</span><span class="o">=</span><span class="s">&#39;unicode&#39;</span><span class="p">)</span>
+<span class="n">wordMatrix</span> <span class="o">=</span> <span class="n">countVec</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">leadstems</span><span class="p">)</span>
+<span class="n">unigramVocab</span> <span class="o">=</span> <span class="n">countVec</span><span class="o">.</span><span class="n">get_feature_names</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[36]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">totalVocab</span> <span class="o">=</span> <span class="n">unigramVocab</span> <span class="o">+</span> <span class="n">bigramVocab</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The, we can do a count vectorizer that takes as an argument the particular vocabulary that we are looking for.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[37]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">countVecAll</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">ngram_range</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">vocabulary</span> <span class="o">=</span> <span class="n">totalVocab</span><span class="p">)</span>
+<span class="n">wordMatrix</span> <span class="o">=</span> <span class="n">countVecAll</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">leadstems</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We also made a couple of helper functions to save and load the sparse arrays that come out of the count vectorizer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[38]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">save_sparse_csr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">array</span><span class="p">):</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">data</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">data</span> <span class="p">,</span><span class="n">indices</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span>
+             <span class="n">indptr</span> <span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">indptr</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">load_sparse_csr</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">((</span>  <span class="n">loader</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span> <span class="n">loader</span><span class="p">[</span><span class="s">&#39;indices&#39;</span><span class="p">],</span> <span class="n">loader</span><span class="p">[</span><span class="s">&#39;indptr&#39;</span><span class="p">]),</span>
+                         <span class="n">shape</span> <span class="o">=</span> <span class="n">loader</span><span class="p">[</span><span class="s">&#39;shape&#39;</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[149]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">save_sparse_csr</span><span class="p">(</span><span class="s">&#39;bigramWordMatrix.npz&#39;</span><span class="p">,</span><span class="n">wordMatrix</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Monthly-Aggregates">Monthly Aggregates<a class="anchor-link" href="#Monthly-Aggregates">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As the final step, we can make monthly aggregates of the unigrams and bigrams outputted by the count vectorizer. It is possible that we will still want to use the granular article level data, but the monthly aggregates will turn out to be very useful.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[39]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">grouped</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s">&#39;yearmonth&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[40]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">wordsByMonth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">grouped</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span><span class="n">wordMatrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">month</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">grouped</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+    <span class="n">wordsByMonth</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">wordMatrix</span><span class="p">[</span><span class="n">grouped</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="n">month</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As an example of the monthly counts by word, we can see how often "America" appears</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[98]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython2"><pre><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">grouped</span><span class="p">)),</span><span class="n">wordsByMonth</span><span class="p">[:,</span><span class="mi">103</span><span class="p">])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;Occurrences of &quot;{}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalVocab</span><span class="p">[</span><span class="mi">103</span><span class="p">]))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;Occurrences&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;Time&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">grouped</span><span class="p">)))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span><span class="mi">2018</span><span class="p">,</span><span class="mi">8</span><span class="p">)));</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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
+b7cf4XzzjWrz5nb855+r5uaqbtmi2rataps2qrt2+R+nqrpkiZ173rzgfS680MbKa6+pDhgQut7w
+7zFeKitVd+5U3b5d9auv4j/+iy8if75zp+ppp1mfX3458r7hYz/ab+H991U7dlSdOFH13nuj9zVd
+2LVLtUkT1Ztvju+42bNNln5UVobGn6rJY/Lk2M9dVRX6/t96y37TBQWq+/db26BBquXlkc8xZ47q
+6NGx/0/SsLj2WruHzZunOmJE9P3vuUd1+vTqbTNmqE6Zonr4sGpWlurUqaonTqjm54fGYqwsWKA6
+frxqSYndK/xo31519+7Q+/37VQsLq+9TUaGanR3f/26IOHqZr85Gi2YM5OQEP6106WLWmBYtamZu
+1oVGjczyN2aMuUbdUjKxrozRubNZX8aPD97HtWiqmuXn/vstg/ruu2taUnJyqi/FVVQUbGEDzILi
+utN27LD+3HGHJQpFWlM4P98+D3K3hls0Fy+2+DLXFZ+dXfMJ1E2oyM62awuKb/WrH7hhg1kU+/Qx
+V02QdbBLF8ugD0reaNzYLDl//KM91Z97rlmJmze379rPCuXinjOSvF3XvLcgeXZ27BaxIBo1snCF
+Tp1ii80MJ9qSgR07mvV93broSTXhYz/ab+Hb3zaX1rPPmqUwUzj7bODpp80iHQ+jRtnCBn54LUpA
+/NnyIqHvv2dPC205ejR0X7r8cnOr+5WwAew+8OSTyVlBh2QGbohFrGEsHTvWLAvnWjRbtrSqJTfd
+ZNb0AQNCZeBixV0Rq6goOE4z3KJZUGDeI2+dYLrNo0NFs4507mwm+GTEHV1zjWUf1za2bNy4yFmr
+Z51lysjatbaSw9ChlmUaaak2l5KSkGvXD/emsm+fuSZatLDYGm+SUBDdugUXqe7Y0UIVKips8po3
+z2LNgjj99OqlVG6/PfIDQVlZaLm+t9825eeBByw+LVI1AcAyscOTPLy4ir030Wn4cHOPRSpf4ipj
+keTtujP9llhMd4YPt7FX27JDQbgPDhdd5J/Ml86MHRtbEXgvbdpYIlQQJSX2ILlnj4VE9O9fu741
+bWpjrEOH0LidONF+I4MH+y9J+Yc/2ENPbf8nyXyKi63ea0VF8MO+lxEjLNzIW7vWm+x2222h33V4
+fP3Bg8CUKZHP766I1a6df4mjykqrDeq9LzVubCE7bv4BwIzzWAgoK05i5YwzbJAlQ9EsKAhlOicD
+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
+QpLC3wH1dA9Tv3OaFQAAAABJRU5ErkJggg==
+"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
     </div>
   </div>
-
     <!-- End Jupyter Notebook HTML -->
 
 
