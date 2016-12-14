@@ -81,7 +81,35 @@ li a:hover:not(.active) {
 
         <section id="main_content">
           <h3><a id="Overview" class="anchor" href="#Overview" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Project Overview</h3>
-          <p> Some stuff about the project </p>
+          <p>Consumer Confidence Index (CCI) is important to manufacturers, retailers, banks, and 
+          governments when deciding investment and policy. Forecasting CCI even one month into the future 
+          would allow more highly optimized decision making. We attempt enhance the accuracy of one-month-forward forecasts by using 
+          New York Times articles that we hypothesize to contain information about emerging trends in the economy.</p>
+          <p> This is an interesting challenge because it simultaneously requires time series analysis and natural language processing.
+          Though nothing prevents the coexistence of those two areas, they are tricky to combine because they both contribute to the feature
+          engineering. Much of natural language processing consists of generating features that capture some semantic meaning, but also pare
+          down the variety of full language. Similarly, time series analysis seeks to include meaningful past information, but simplify against needing
+          all previous values. The techniques used for feature selection in both of these fields often seem orthogonal; any feature you extract
+          from text could just as well have been extracted from previous text to give past values.</p>
+          <p> From the NLP perspective, we tokenize, stem, and produce a (n<=2)-gram dictionary using the Dunning Log-Likelihood ratio. This is elaborated in later sections.
+          With the unigrams and bigrams, we perform two types of dimensional reduction, which attempt to be uncorrelated from each other. The first method is unsupervised Latent
+          Dirichlet Allocation that assigns words to topics and gives similarity scores of each article to each topic. While this is not obviously relevant to CCI in particular, 
+          we hypothesize that it will be useful as the topics generated seem to carry some intuitively useful information. The other dimensional reduction technique is
+          average sentiment score using the SentiWordNet dictionary. This dictionary contains the positivity or negativity of each word so that sentiment can be aggregated on
+          an article or monthly scale.</p>
+          <p> There are two ways that we attempt to integrate the text and temporal information. The first is to extract features from the text at each time point and incorporate that
+          into an ARIMA model with exogenous control or a dynamic vector autoregression model. These both had some significant difficulties that are addressed in their respective sections.
+           The other method of integration was to use ARIMA on just the CCI to get a sense of the lags that should be used. Then these lags are used as features for a time-independent
+           model like linear regression or support vector regression. Essentially, this scheme redundantly encodes the relevant temporal information in the feature space.</p>
+           <p> It turns out that going to time-independent models works better in practice because we are able to implement more sophisticated machine learning techniques. For example, including
+           the lags as features greatly increases the dimension of the model, but we can perform LASSO regression with a windowed leave-one-out cross validation scheme to do feature selection.
+           Then, we can experiment with many models, from linear regression to support vector regression (SVR), random forests, and gradient boosting, in order to find what works best. In the end, we found
+           that and ensemble of linear regression and SVR combined by another SVR works best. The whole pipeline from start to finish is described below.</p>
+          <center><img src="WorkDiagram.png" style="width:600px;height:350px;"></center>
+          <p> The results are that the ensemble of linear regression and SVM achieved R-squared_CV=0.990 and RMSE_CV=0.145. This is only slightly better than a model just using CCI, which gets RMSE_CV=0.151. In
+          all, using the news data helps forecast the sharp changes in CCI a little better, but the difference is slight. Without a business or policy context, we can't know whether this level of improvement is
+          meaningful. Thought the improvements are slight, we anticipated from the beginning that this problem would be difficult as even trained experts do not yield great insights about CCI using the news.</p>
+          <center><img src="CCIwithPrediction.png" style="width:700px;height:280px;"></center>
         <hr>
           <h3><a id="About" class="anchor" href="#About" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About Us</h3>
 		<img style="margin-right:20px" height="100" width="95" src="me.jpg" align="left">
