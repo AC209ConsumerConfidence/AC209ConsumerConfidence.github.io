@@ -1,55 +1,64 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>AC209</title>
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+<style>
+body {
+    margin: 0;
+}
+div.outer {
+    width: 85%;
+    float: right;
+    padding-right: 5%;
+    padding-left: 5%;
+}
+div.container {
+    width: 100%;
 
-    <!-- Combo with CSSNormalize, CSSGrids-Responsive, CSSForm, CSSTable, CSSList (v3.9.1) -->
-    <link rel="stylesheet" href="http://yui-s.yahooapis.com/combo?3.9.1/build/cssnormalize/cssnormalize-min.css&amp;3.9.1/build/cssgrids-responsive/cssgrids-responsive-min.css&amp;3.9.1/build/cssbutton/cssbutton-min.css&amp;gallery-2013.03.27-22-06/build/gallerycss-csslist/gallerycss-csslist-min.css&amp;gallery-2013.03.27-22-06/build/gallerycss-csstable/gallerycss-csstable-min.css&amp;gallery-2013.03.27-22-06/build/gallerycss-cssform/gallerycss-cssform-min.css">
-    
-    <!-- Some custom styles to make things pretty. -->
-    <link rel="stylesheet" type="text/css" href="https://rawgithub.com/tilomitra/prettypages/gh-pages/ui.css">
+}
+ul.leftnav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 15%;
+    background-color: #f1f1f1;
+    position: fixed;
+    height: 100%;
+    overflow: auto;
+}
 
-    <!-- RainbowJS Syntax Highlighting - Github Theme. 
-         For more themes, go to https://github.com/ccampbell/rainbow/tree/master/themes -->
-    <link rel="stylesheet" type="text/css" href="https://rawgithub.com/ccampbell/rainbow/master/themes/github.css">
+li a {
+    display: block;
+    color: #000;
+    padding: 8px 16px;
+    text-decoration: none;
+}
 
-    <!-- Modify header colors here to customize the look and feel of the site-->
-    <style>
-        p { padding: 0; }
-        
-        .header {
-            background: rgb(0, 0, 0);
-         }
-            .header h1 {
-                color: rgb(116, 130, 230);
-                ; margin-top: 50px
-            }
-             .header h2 {
-                 font-weight:300;
-                 margin-top:0;
-                 color: rgb(116, 130, 230);
-             }
-    	
-		h2 { position: relative;}
-		h2:before { display: block; content: " "; margin-top: -80px; height: 80px; visibility: hidden; },
-		ul:before { display: block; content: " "; margin-top: -50px; height: 50px; visibility: hidden; }
+li a.active {
+    background-color: #4CAF50;
+    color: white;
+}
 
-    </style>
-    <title>AC209</title>
+li a:hover:not(.active) {
+    background-color: #555;
+    color: white;
+}
+</style>
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Predicting Consumer Confidence Index using the news by AC209ConsumerConfidence</title>
   </head>
-<body class='yui3-skin-sam'>
 
-    <div id="headerMenu" class="yui3-menu yui3-menu-open yui3-menu-horizontal yui3-menu-fixed">
-        <span class="yui3-menu-heading">AC209</span>
-        <ul>
-            <li class="yui3-menu-active"><a href="http://AC209ConsumerConfidence.github.io/" target="_blank">Home</a></li>
-            <li><a href="http://AC209ConsumerConfidence.github.io/#Overview">Project Overview</a></li>
-            <li><a href="http://AC209ConsumerConfidence.github.io/#About">About Us</a></li>
-        </ul>
-        <ul>
-        	<li><a class="yui3-menu-label" href="#Adaptive"><em>Sections:</em></a></li>
+  <body>
+        <ul class='leftnav'>
+        	<li><a href="#Adaptive"><em>Sections:</em></a></li>
+        	<li><a href="http://AC209ConsumerConfidence.github.io/#Overview">Project Overview</a></li>
             <li><a href="http://AC209ConsumerConfidence.github.io/DataAcquisition">Data Acquisition</a></li>
             <li><a href="http://AC209ConsumerConfidence.github.io/DataCleaningBigrams">Data Cleaning & Bigrams</a></li>
             <li><a href="http://AC209ConsumerConfidence.github.io/ARIMAmodel_BaselineFinal">ARIMA Baseline</a></li>
@@ -59,13 +68,23 @@
             <li><a href="http://AC209ConsumerConfidence.github.io/SWN">SentiWordNet</a></li>
             <li><a href="http://AC209ConsumerConfidence.github.io/Modeling">Modeling</a></li>
             <li><a href="http://AC209ConsumerConfidence.github.io/Results">Results</a></li>
+            <li><a href="http://AC209ConsumerConfidence.github.io/#About">About Us</a></li>
         </ul>
-			
-    </div>
+    <div id="container" class='outer'>
+      <div>
 
-    <div class="header yui3-u-1">
-        <h1 class="yui3-u-1">Predicting Consumer Confidence Index Using the News</h1>
-    </div>
+        <header>
+          <h1>Predicting Consumer Confidence Index using the news</h1>
+          <h2>Mali Akmanalp, Jose Ramon Morales Arilla, and Kevin Shain</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/AC209ConsumerConfidence" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
 
     <!-- Jupyter Notebook HTML -->
 <head><meta charset="utf-8" />
@@ -205,6 +224,7 @@ div#notebook {
     display: block;
     page-break-inside: avoid; 
   }
+
 }
 </style>
 
@@ -242,8 +262,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><hr width=80%></p>
-<h1 id="Obtaining-the-Data"><center>Obtaining the Data</center><a class="anchor-link" href="#Obtaining-the-Data"></a></h1><hr width=80%>
+<h1 id="Obtaining-the-Data"><center>Obtaining the Data</center><a class="anchor-link" href="#Obtaining-the-Data"></a></h1>
 </div>
 </div>
 </div>
@@ -272,7 +291,8 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Consumer-Confidence-Index">Consumer Confidence Index<a class="anchor-link" href="#Consumer-Confidence-Index">&#182;</a></h2><hr>
+<h2 id="Consumer-Confidence-Index">Consumer Confidence Index<a class="anchor-link" href="#Consumer-Confidence-Index">&#182;</a></h2>
+<hr>
 
 </div>
 </div>
@@ -292,7 +312,8 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="New-York-Times-Articles">New York Times Articles<a class="anchor-link" href="#New-York-Times-Articles">&#182;</a></h2><hr>
+<h2 id="New-York-Times-Articles">New York Times Articles<a class="anchor-link" href="#New-York-Times-Articles">&#182;</a></h2>
+<hr>
 
 </div>
 </div>
@@ -591,13 +612,14 @@ Complete! Total Elapsed time: 82.5 seconds
   </div>
 
     <!-- End Jupyter Notebook HTML -->
+        </section>
 
+        <footer>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
 
-        <!-- TYPEKIT -->
-        <script type="text/javascript" src="//use.typekit.net/ajf8ggy.js"></script>
-        <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-        <script src="https://rawgithub.com/ccampbell/rainbow/master/js/rainbow.min.js"></script>
-        <script src="https://rawgithub.com/ccampbell/rainbow/master/js/language/generic.js"></script>
+        
+      </div>
     </div>
-</body>
+  </body>
 </html>
